@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Karczma D&D - Panel Zarządzania</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Karczma Niedźwiedź</h1>
+            <div class="header-buttons">
+                <button id="filterButton" class="filter-button" title="Filtruj elementy">
+                    <i class="fas fa-filter"></i>
+                </button>
+                <button id="editTax" class="edit-tax-button" title="Edytuj stawkę podatku">
+                    <i class="fas fa-percentage"></i>
+                </button>
+                <button id="exportData" class="export-button" title="Eksportuj dane">
+                    <i class="fas fa-file-export"></i>
+                </button>
+                <button id="importData" class="import-button" title="Importuj dane">
+                    <i class="fas fa-file-import"></i>
+                </button>
+            </div>
+        </header>
+        
+        <main>
+            <div class="bento-grid">
+                <!-- Box z opisem karczmy -->
+                <div class="bento-box description-box">
+                    <div class="section-header">
+                        <h2>Opis Karczmy</h2>
+                        <div class="header-buttons">
+                            <button class="import-button" id="importData">
+                                <i class="fas fa-upload"></i> Import
+                            </button>
+                            <button class="export-button" id="exportData">
+                                <i class="fas fa-download"></i> Eksport
+                            </button>
+                            <button class="edit-button" id="editDescription">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="content-container">
+                        <div id="descriptionView" class="markdown-content"></div>
+                        <div id="descriptionEdit" style="display: none;">
+                            <div class="form-group">
+                                <label for="tavernDescription">Opis karczmy (Markdown):</label>
+                                <textarea id="tavernDescription" rows="10"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label for="descriptionSize">Rozmiar boxa:</label>
+                                <div class="size-inputs">
+                                    <div class="size-input">
+                                        <label for="descriptionWidth">Szerokość:</label>
+                                        <select id="descriptionWidth" required>
+                                            <option value="1">1 jednostka</option>
+                                            <option value="2">2 jednostki</option>
+                                            <option value="3">3 jednostki</option>
+                                            <option value="4">4 jednostki</option>
+                                        </select>
+                                    </div>
+                                    <div class="size-input">
+                                        <label for="descriptionHeight">Wysokość:</label>
+                                        <select id="descriptionHeight" required>
+                                            <option value="1">1 jednostka</option>
+                                            <option value="2">2 jednostki</option>
+                                            <option value="3">3 jednostki</option>
+                                            <option value="4">4 jednostki</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="button-group">
+                                <button id="saveDescription">Zapisz</button>
+                                <button id="cancelDescription">Anuluj</button>
+                            </div>
+                        </div>
+                        
+                        <div class="summary-container">
+                            <div class="summary-item">
+                                <span class="summary-label">Koszta:</span>
+                                <span class="summary-value" id="totalCosts" title=""></span>
+                            </div>
+                            <div class="summary-item">
+                                <span class="summary-label">Dochód:</span>
+                                <span class="summary-value" id="totalIncome" title=""></span>
+                            </div>
+                            <div class="summary-item">
+                                <span class="summary-label">Podatek:</span>
+                                <span class="summary-value" id="totalTax" title=""></span>
+                                <button id="editTax" class="edit-button" title="Edytuj stawkę podatku">✎</button>
+                            </div>
+                            <div class="summary-item">
+                                <span class="summary-label">Bilans:</span>
+                                <span class="summary-value" id="totalBalance" title=""></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Przycisk dodawania nowego elementu -->
+                <div class="bento-box add-element-box">
+                    <button class="add-button" id="addElement">
+                        <i class="fas fa-plus"></i> Dodaj Element
+                    </button>
+                </div>
+
+                <!-- Lista elementów karczmy -->
+                <div id="elementsList" class="elements-list"></div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Szablon elementu karczmy -->
+    <template id="elementTemplate">
+        <div class="element-card">
+            <div class="element-header">
+                <h3 class="element-name"></h3>
+                <div class="element-actions">
+                    <button class="edit-button">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="delete-button">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="element-content">
+                <div class="element-description markdown-content"></div>
+                <div class="element-costs" style="display: none;">
+                    <h4>Koszty:</h4>
+                    <ul class="costs-list"></ul>
+                </div>
+                <div class="element-income" style="display: none;">
+                    <h4>Dochody:</h4>
+                    <ul class="income-list"></ul>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <!-- Modal do dodawania/edycji elementu -->
+    <div id="elementModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Dodaj Element</h2>
+                <button class="close-button">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="elementForm">
+                    <div class="form-group">
+                        <label for="elementName">Nazwa elementu:</label>
+                        <input type="text" id="elementName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="elementDescription">Opis (Markdown):</label>
+                        <textarea id="elementDescription" rows="4"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="elementTags">Tagi (oddzielone przecinkami):</label>
+                        <input type="text" id="elementTags" placeholder="np. jedzenie, napoje, rozrywka">
+                        <div id="tagSuggestions" class="tag-suggestions"></div>
+                        <div class="available-tags">
+                            <h4>Dostępne tagi:</h4>
+                            <div id="availableElementTags" class="tags-list"></div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="elementSize">Rozmiar boxa:</label>
+                        <div class="size-inputs">
+                            <div class="size-input">
+                                <label for="elementWidth">Szerokość:</label>
+                                <select id="elementWidth" required>
+                                    <option value="1">1 jednostka</option>
+                                    <option value="2">2 jednostki</option>
+                                    <option value="3">3 jednostki</option>
+                                    <option value="4">4 jednostki</option>
+                                </select>
+                            </div>
+                            <div class="size-input">
+                                <label for="elementHeight">Wysokość:</label>
+                                <select id="elementHeight" required>
+                                    <option value="1">1 jednostka</option>
+                                    <option value="2">2 jednostki</option>
+                                    <option value="3">3 jednostki</option>
+                                    <option value="4">4 jednostki</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Koszty:</label>
+                        <div id="costsList" class="items-list">
+                            <div class="item-input">
+                                <input type="text" placeholder="Nazwa kosztu" class="cost-name">
+                                <input type="number" placeholder="Wartość" class="cost-value">
+                                <button type="button" class="remove-item">&times;</button>
+                            </div>
+                        </div>
+                        <button type="button" class="add-item" data-target="costsList">+ Dodaj koszt</button>
+                    </div>
+                    <div class="form-group">
+                        <label>Dochody:</label>
+                        <div id="incomeList" class="items-list">
+                            <div class="item-input">
+                                <input type="text" placeholder="Nazwa dochodu" class="income-name">
+                                <input type="number" placeholder="Wartość" class="income-value">
+                                <button type="button" class="remove-item">&times;</button>
+                            </div>
+                        </div>
+                        <button type="button" class="add-item" data-target="incomeList">+ Dodaj dochód</button>
+                    </div>
+                    <div class="button-group">
+                        <button type="submit">Zapisz</button>
+                        <button type="button" class="cancel-button">Anuluj</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal do edycji stawki podatku -->
+    <div id="taxModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <h2>Edytuj stawkę podatku</h2>
+            <form id="taxForm">
+                <div class="form-group">
+                    <label for="taxRate">Stawka podatku (w procentach):</label>
+                    <input type="number" id="taxRate" min="0" max="100" step="1" required>
+                </div>
+                <div class="button-group">
+                    <button type="submit">Zapisz</button>
+                    <button type="button" class="cancel-button">Anuluj</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal do filtrowania -->
+    <div id="filterModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Filtruj elementy</h2>
+                <button class="close-button">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="tags-filter">
+                    <h3>Dostępne tagi:</h3>
+                    <div id="availableTags" class="tags-list"></div>
+                    <div class="selected-tags">
+                        <h3>Wybrane tagi:</h3>
+                        <div id="selectedTags" class="tags-list"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="cancel-button">Anuluj</button>
+                <button class="apply-button">Zastosuj</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html> 
