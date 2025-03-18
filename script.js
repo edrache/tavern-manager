@@ -5,7 +5,30 @@ let tavernData = {
     elements: [],
     taxRate: 0.8,
     descriptionSize: { width: 2, height: 1 },
-    selectedTags: []  // Lista wybranych tagów do filtrowania
+    selectedTags: [],  // Lista wybranych tagów do filtrowania
+    elementsOrder: [],  // Lista indeksów elementów w kolejności wyświetlania
+    filters: {
+        tags: [],
+        positiveBalance: false,
+        negativeBalance: false
+    },
+    colors: {
+        background: '#f4f1ea',
+        text: '#2c1810',
+        primary: '#8b4513',
+        secondary: '#495057',
+        positiveBalanceStart: '#ffffff',
+        positiveBalanceEnd: '#e8f5e9',
+        negativeBalanceStart: '#ffffff',
+        negativeBalanceEnd: '#ffebee',
+        neutralBalanceStart: '#ffffff',
+        neutralBalanceEnd: '#f5f5f5'
+    },
+    pageSettings: {
+        baseBoxWidth: 250,
+        baseBoxHeight: 100,
+        gridGap: 16
+    }
 };
 
 // Elementy DOM
@@ -32,6 +55,14 @@ const selectedTagsContainer = document.getElementById('selectedTags');
 const elementTagsInput = document.getElementById('elementTags');
 const tagSuggestionsContainer = document.getElementById('tagSuggestions');
 const availableElementTagsContainer = document.getElementById('availableElementTags');
+const colorsModal = document.getElementById('colorsModal');
+const colorsForm = document.getElementById('colorsForm');
+const editColorsButton = document.getElementById('editColors');
+
+// Obsługa modalu ustawień strony
+const pageSettingsModal = document.getElementById('pageSettingsModal');
+const pageSettingsForm = document.getElementById('pageSettingsForm');
+const pageSettingsButton = document.getElementById('pageSettings');
 
 // Funkcja aktualizująca widok Markdown
 function updateMarkdownView() {
@@ -80,8 +111,36 @@ function loadFromLocalStorage() {
                 elements: updatedElements,
                 taxRate: parsedData.taxRate || 0.8,
                 descriptionSize: parsedData.descriptionSize || { width: 2, height: 1 },
-                selectedTags: parsedData.selectedTags || []
+                selectedTags: parsedData.selectedTags || [],
+                elementsOrder: parsedData.elementsOrder || [],
+                filters: parsedData.filters || {
+                    tags: [],
+                    positiveBalance: false,
+                    negativeBalance: false
+                },
+                colors: parsedData.colors || {
+                    background: '#f4f1ea',
+                    text: '#2c1810',
+                    primary: '#8b4513',
+                    secondary: '#495057',
+                    positiveBalanceStart: '#ffffff',
+                    positiveBalanceEnd: '#e8f5e9',
+                    negativeBalanceStart: '#ffffff',
+                    negativeBalanceEnd: '#ffebee',
+                    neutralBalanceStart: '#ffffff',
+                    neutralBalanceEnd: '#f5f5f5'
+                },
+                pageSettings: parsedData.pageSettings || {
+                    baseBoxWidth: 250,
+                    baseBoxHeight: 100,
+                    gridGap: 16
+                }
             };
+            
+            // Jeśli nie ma zapisanej kolejności lub jest nieprawidłowa, inicjalizuj domyślną
+            if (tavernData.elementsOrder.length !== tavernData.elements.length) {
+                tavernData.elementsOrder = Array.from({ length: tavernData.elements.length }, (_, i) => i);
+            }
             
             console.log('Ustawiona stawka podatku:', tavernData.taxRate);
             descriptionTextarea.value = tavernData.description;
@@ -90,6 +149,8 @@ function loadFromLocalStorage() {
             updateMarkdownView();
             renderElements();
             calculateTotals();
+            updateColors();
+            updatePageSettings();
         } catch (error) {
             console.error('Błąd podczas wczytywania danych z localStorage:', error);
             tavernData = {
@@ -98,7 +159,30 @@ function loadFromLocalStorage() {
                 elements: [],
                 taxRate: 0.8,
                 descriptionSize: { width: 2, height: 1 },
-                selectedTags: []
+                selectedTags: [],
+                elementsOrder: [],
+                filters: {
+                    tags: [],
+                    positiveBalance: false,
+                    negativeBalance: false
+                },
+                colors: {
+                    background: '#f4f1ea',
+                    text: '#2c1810',
+                    primary: '#8b4513',
+                    secondary: '#495057',
+                    positiveBalanceStart: '#ffffff',
+                    positiveBalanceEnd: '#e8f5e9',
+                    negativeBalanceStart: '#ffffff',
+                    negativeBalanceEnd: '#ffebee',
+                    neutralBalanceStart: '#ffffff',
+                    neutralBalanceEnd: '#f5f5f5'
+                },
+                pageSettings: {
+                    baseBoxWidth: 250,
+                    baseBoxHeight: 100,
+                    gridGap: 16
+                }
             };
         }
     }
@@ -172,8 +256,35 @@ function calculateTotals() {
 // Funkcje do zarządzania elementami
 function renderElements() {
     elementsList.innerHTML = '';
-    tavernData.elements.forEach((element, index) => {
+    
+    // Używamy kolejności z elementsOrder, jeśli istnieje
+    const elementsToRender = tavernData.elementsOrder.length === tavernData.elements.length
+        ? tavernData.elementsOrder.map(index => tavernData.elements[index])
+        : tavernData.elements;
+    
+    elementsToRender.forEach((element, index) => {
         const elementCard = elementTemplate.content.cloneNode(true);
+        const card = elementCard.querySelector('.element-card');
+        
+        // Dodajemy indeks jako data-attribute
+        card.dataset.index = tavernData.elementsOrder.length === tavernData.elements.length
+            ? tavernData.elementsOrder[index]
+            : index;
+        
+        // Ustawianie koloru elementu
+        if (element.color) {
+            card.classList.add('custom-color');
+            card.style.backgroundColor = element.color;
+        } else {
+            const balance = calculateElementBalance(element);
+            if (balance > 0) {
+                card.classList.add('positive-balance');
+            } else if (balance < 0) {
+                card.classList.add('negative-balance');
+            } else {
+                card.classList.add('neutral-balance');
+            }
+        }
         
         elementCard.querySelector('.element-name').textContent = element.name;
         
@@ -242,6 +353,8 @@ function renderElements() {
         
         elementsList.appendChild(elementCard);
     });
+    
+    initDragAndDrop();
     calculateTotals();
     filterElements();
 }
@@ -267,6 +380,7 @@ function editElement(index) {
     document.getElementById('elementTags').value = element.tags ? element.tags.join(', ') : '';
     document.getElementById('elementWidth').value = element.size?.width || 1;
     document.getElementById('elementHeight').value = element.size?.height || 1;
+    document.getElementById('elementColor').value = element.color || '#ffffff';
     
     // Wypełnienie kosztów
     const costsList = document.getElementById('costsList');
@@ -293,7 +407,14 @@ function editElement(index) {
 
 function deleteElement(index) {
     if (confirm('Czy na pewno chcesz usunąć ten element?')) {
+        // Usuń element z tablicy elements
         tavernData.elements.splice(index, 1);
+        
+        // Zaktualizuj kolejność
+        tavernData.elementsOrder = tavernData.elementsOrder
+            .filter(i => i !== index)
+            .map(i => i > index ? i - 1 : i);
+        
         renderElements();
         saveToLocalStorage();
     }
@@ -327,6 +448,7 @@ elementForm.addEventListener('submit', (e) => {
             width: parseInt(document.getElementById('elementWidth').value),
             height: parseInt(document.getElementById('elementHeight').value)
         },
+        color: document.getElementById('elementColor').value === '#ffffff' ? null : document.getElementById('elementColor').value,
         costs: Array.from(document.querySelectorAll('.cost-name')).map((input, index) => ({
             name: input.value,
             value: parseInt(document.querySelectorAll('.cost-value')[index].value) || 0
@@ -342,6 +464,7 @@ elementForm.addEventListener('submit', (e) => {
         tavernData.elements[editIndex] = element;
     } else {
         tavernData.elements.push(element);
+        tavernData.elementsOrder.push(tavernData.elements.length - 1);
     }
     
     renderElements();
@@ -493,9 +616,23 @@ function filterElements() {
     const elements = document.querySelectorAll('.element-card');
     elements.forEach(element => {
         const elementTags = element.dataset.tags ? element.dataset.tags.split(',') : [];
-        const shouldShow = tavernData.selectedTags.length === 0 || 
-                          tavernData.selectedTags.some(tag => elementTags.includes(tag));
-        element.style.display = shouldShow ? 'block' : 'none';
+        const elementIndex = parseInt(element.dataset.index);
+        const elementData = tavernData.elements[elementIndex];
+        
+        // Sprawdzanie bilansu elementu
+        const balance = calculateElementBalance(elementData);
+        const matchesBalanceFilter = (
+            (!tavernData.filters.positiveBalance && !tavernData.filters.negativeBalance) || // żaden filtr bilansu nie jest wybrany
+            (tavernData.filters.positiveBalance && balance > 0) || // filtr dodatniego bilansu i element ma dodatni bilans
+            (tavernData.filters.negativeBalance && balance < 0)    // filtr ujemnego bilansu i element ma ujemny bilans
+        );
+        
+        // Sprawdzanie tagów
+        const matchesTagFilter = tavernData.filters.tags.length === 0 || 
+                               tavernData.filters.tags.some(tag => elementTags.includes(tag));
+        
+        // Element jest widoczny tylko jeśli spełnia oba warunki filtrowania
+        element.style.display = (matchesBalanceFilter && matchesTagFilter) ? 'block' : 'none';
     });
 }
 
@@ -505,8 +642,12 @@ function renderFilterTags() {
     availableTagsContainer.innerHTML = '';
     selectedTagsContainer.innerHTML = '';
     
+    // Aktualizacja checkboxów bilansu
+    document.getElementById('filterPositiveBalance').checked = tavernData.filters.positiveBalance;
+    document.getElementById('filterNegativeBalance').checked = tavernData.filters.negativeBalance;
+    
     allTags.forEach(tag => {
-        const isSelected = tavernData.selectedTags.includes(tag);
+        const isSelected = tavernData.filters.tags.includes(tag);
         const tagElement = document.createElement('div');
         tagElement.className = `tag ${isSelected ? 'selected' : ''}`;
         tagElement.textContent = tag;
@@ -522,11 +663,11 @@ function renderFilterTags() {
 
 // Funkcja do przełączania wyboru tagu w filtrach
 function toggleTagSelection(tag) {
-    const index = tavernData.selectedTags.indexOf(tag);
+    const index = tavernData.filters.tags.indexOf(tag);
     if (index === -1) {
-        tavernData.selectedTags.push(tag);
+        tavernData.filters.tags.push(tag);
     } else {
-        tavernData.selectedTags.splice(index, 1);
+        tavernData.filters.tags.splice(index, 1);
     }
     renderFilterTags();
 }
@@ -537,14 +678,16 @@ filterButton.addEventListener('click', () => {
     filterModal.style.display = 'flex';
 });
 
-filterModal.querySelector('.close-button').addEventListener('click', () => {
-    filterModal.style.display = 'none';
+// Obsługa filtrów bilansu
+document.getElementById('filterPositiveBalance').addEventListener('change', (e) => {
+    tavernData.filters.positiveBalance = e.target.checked;
 });
 
-filterModal.querySelector('.cancel-button').addEventListener('click', () => {
-    filterModal.style.display = 'none';
+document.getElementById('filterNegativeBalance').addEventListener('change', (e) => {
+    tavernData.filters.negativeBalance = e.target.checked;
 });
 
+// Modyfikacja obsługi przycisku "Zastosuj" w modalu filtrowania
 filterModal.querySelector('.apply-button').addEventListener('click', () => {
     filterElements();
     saveToLocalStorage();
@@ -604,8 +747,210 @@ document.addEventListener('click', (e) => {
     }
 });
 
+// Dodajemy obsługę przeciągania
+function initDragAndDrop() {
+    const elements = document.querySelectorAll('.element-card');
+    
+    elements.forEach(element => {
+        element.addEventListener('dragstart', (e) => {
+            e.target.classList.add('dragging');
+            e.dataTransfer.setData('text/plain', e.target.dataset.index);
+        });
+
+        element.addEventListener('dragend', (e) => {
+            e.target.classList.remove('dragging');
+            
+            // Aktualizacja kolejności po przeciągnięciu
+            const newOrder = Array.from(document.querySelectorAll('.element-card')).map(el => 
+                parseInt(el.dataset.index)
+            );
+            tavernData.elementsOrder = newOrder;
+            saveToLocalStorage();
+        });
+
+        element.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            const draggingElement = document.querySelector('.dragging');
+            if (draggingElement === element) return;
+            
+            const box = element.getBoundingClientRect();
+            const offset = e.clientY - box.top - (box.height / 2);
+            
+            if (offset < 0 && element.previousElementSibling !== draggingElement) {
+                element.parentNode.insertBefore(draggingElement, element);
+            } else if (offset > 0 && element.nextElementSibling !== draggingElement) {
+                element.parentNode.insertBefore(draggingElement, element.nextElementSibling);
+            }
+        });
+    });
+}
+
 // Inicjalizacja
 document.body.appendChild(fileInput);
 addElementButton.addEventListener('click', addElement);
 loadFromLocalStorage();
-updateMarkdownView(); 
+updateMarkdownView();
+
+// Funkcja obliczająca bilans dla pojedynczego elementu
+function calculateElementBalance(element) {
+    const totalCosts = element.costs.reduce((sum, cost) => sum + (cost.value || 0), 0);
+    const totalIncome = element.income.reduce((sum, income) => sum + (income.value || 0), 0);
+    return totalIncome - totalCosts;
+}
+
+// Dodanie obsługi przycisku reset koloru
+document.getElementById('resetColor').addEventListener('click', () => {
+    document.getElementById('elementColor').value = '#ffffff';
+});
+
+// Funkcja do aktualizacji kolorów w CSS
+function updateColors() {
+    document.documentElement.style.setProperty('--background-color', tavernData.colors.background);
+    document.documentElement.style.setProperty('--text-color', tavernData.colors.text);
+    document.documentElement.style.setProperty('--primary-color', tavernData.colors.primary);
+    document.documentElement.style.setProperty('--secondary-color', tavernData.colors.secondary);
+    document.documentElement.style.setProperty('--positive-balance-color-start', tavernData.colors.positiveBalanceStart);
+    document.documentElement.style.setProperty('--positive-balance-color-end', tavernData.colors.positiveBalanceEnd);
+    document.documentElement.style.setProperty('--negative-balance-color-start', tavernData.colors.negativeBalanceStart);
+    document.documentElement.style.setProperty('--negative-balance-color-end', tavernData.colors.negativeBalanceEnd);
+    document.documentElement.style.setProperty('--neutral-balance-color-start', tavernData.colors.neutralBalanceStart);
+    document.documentElement.style.setProperty('--neutral-balance-color-end', tavernData.colors.neutralBalanceEnd);
+}
+
+// Funkcja do resetowania kolorów do domyślnych
+function resetColors() {
+    tavernData.colors = {
+        background: '#f4f1ea',
+        text: '#2c1810',
+        primary: '#8b4513',
+        secondary: '#495057',
+        positiveBalanceStart: '#ffffff',
+        positiveBalanceEnd: '#e8f5e9',
+        negativeBalanceStart: '#ffffff',
+        negativeBalanceEnd: '#ffebee',
+        neutralBalanceStart: '#ffffff',
+        neutralBalanceEnd: '#f5f5f5'
+    };
+    updateColors();
+    saveToLocalStorage();
+}
+
+// Obsługa edytora kolorów
+editColorsButton.addEventListener('click', () => {
+    // Wypełnij formularz aktualnymi kolorami
+    document.getElementById('backgroundColor').value = tavernData.colors.background;
+    document.getElementById('textColor').value = tavernData.colors.text;
+    document.getElementById('primaryColor').value = tavernData.colors.primary;
+    document.getElementById('secondaryColor').value = tavernData.colors.secondary;
+    document.getElementById('positiveBalanceColorStart').value = tavernData.colors.positiveBalanceStart;
+    document.getElementById('positiveBalanceColorEnd').value = tavernData.colors.positiveBalanceEnd;
+    document.getElementById('negativeBalanceColorStart').value = tavernData.colors.negativeBalanceStart;
+    document.getElementById('negativeBalanceColorEnd').value = tavernData.colors.negativeBalanceEnd;
+    document.getElementById('neutralBalanceColorStart').value = tavernData.colors.neutralBalanceStart;
+    document.getElementById('neutralBalanceColorEnd').value = tavernData.colors.neutralBalanceEnd;
+    
+    colorsModal.style.display = 'flex';
+});
+
+colorsForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    
+    // Zapisz nowe kolory
+    tavernData.colors = {
+        background: document.getElementById('backgroundColor').value,
+        text: document.getElementById('textColor').value,
+        primary: document.getElementById('primaryColor').value,
+        secondary: document.getElementById('secondaryColor').value,
+        positiveBalanceStart: document.getElementById('positiveBalanceColorStart').value,
+        positiveBalanceEnd: document.getElementById('positiveBalanceColorEnd').value,
+        negativeBalanceStart: document.getElementById('negativeBalanceColorStart').value,
+        negativeBalanceEnd: document.getElementById('negativeBalanceColorEnd').value,
+        neutralBalanceStart: document.getElementById('neutralBalanceColorStart').value,
+        neutralBalanceEnd: document.getElementById('neutralBalanceColorEnd').value
+    };
+    
+    updateColors();
+    saveToLocalStorage();
+    colorsModal.style.display = 'none';
+});
+
+// Obsługa przycisku resetowania kolorów
+colorsModal.querySelector('.reset-colors-button').addEventListener('click', () => {
+    if (confirm('Czy na pewno chcesz przywrócić domyślne kolory?')) {
+        resetColors();
+        colorsModal.style.display = 'none';
+    }
+});
+
+// Obsługa zamykania modalu kolorów
+colorsModal.querySelector('.close-button').addEventListener('click', () => {
+    colorsModal.style.display = 'none';
+});
+
+colorsModal.querySelector('.cancel-button').addEventListener('click', () => {
+    colorsModal.style.display = 'none';
+});
+
+// Funkcja do aktualizacji zmiennych CSS
+function updatePageSettings() {
+    document.documentElement.style.setProperty('--base-box-width', `${tavernData.pageSettings.baseBoxWidth}px`);
+    document.documentElement.style.setProperty('--base-box-height', `${tavernData.pageSettings.baseBoxHeight}px`);
+    document.documentElement.style.setProperty('--grid-gap', `${tavernData.pageSettings.gridGap}px`);
+}
+
+// Funkcja do resetowania ustawień strony
+function resetPageSettings() {
+    tavernData.pageSettings = {
+        baseBoxWidth: 250,
+        baseBoxHeight: 100,
+        gridGap: 16
+    };
+    updatePageSettings();
+    saveToLocalStorage();
+}
+
+// Obsługa przycisku ustawień strony
+pageSettingsButton.addEventListener('click', () => {
+    // Wypełnij formularz aktualnymi wartościami
+    document.getElementById('baseBoxWidth').value = tavernData.pageSettings.baseBoxWidth;
+    document.getElementById('baseBoxHeight').value = tavernData.pageSettings.baseBoxHeight;
+    document.getElementById('gridGap').value = tavernData.pageSettings.gridGap;
+    
+    pageSettingsModal.style.display = 'flex';
+});
+
+// Obsługa formularza ustawień strony
+pageSettingsForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    
+    // Zapisz nowe ustawienia
+    tavernData.pageSettings = {
+        baseBoxWidth: parseInt(document.getElementById('baseBoxWidth').value),
+        baseBoxHeight: parseInt(document.getElementById('baseBoxHeight').value),
+        gridGap: parseInt(document.getElementById('gridGap').value)
+    };
+    
+    updatePageSettings();
+    saveToLocalStorage();
+    pageSettingsModal.style.display = 'none';
+});
+
+// Obsługa przycisku resetowania ustawień
+pageSettingsModal.querySelector('.reset-settings-button').addEventListener('click', () => {
+    if (confirm('Czy na pewno chcesz przywrócić domyślne ustawienia strony?')) {
+        resetPageSettings();
+        pageSettingsModal.style.display = 'none';
+    }
+});
+
+// Obsługa zamykania modalu ustawień
+pageSettingsModal.querySelector('.close-button').addEventListener('click', () => {
+    pageSettingsModal.style.display = 'none';
+});
+
+pageSettingsModal.querySelector('.cancel-button').addEventListener('click', () => {
+    pageSettingsModal.style.display = 'none';
+});
+
+// Wywołaj updatePageSettings przy starcie
+updatePageSettings(); 

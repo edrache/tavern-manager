@@ -54,31 +54,97 @@ h2 {
 
 .header-buttons {
     display: flex;
-    gap: 0.5rem;
+    gap: 0.75rem;
+    align-items: center;
 }
 
+.header-buttons button {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.6rem 1rem;
+    border-radius: 0.5rem;
+    font-size: 1rem;
+    transition: all 0.2s ease;
+    border: none;
+    background-color: white;
+    color: var(--primary-color);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.header-buttons button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);
+}
+
+/* Specyficzne style dla przycisków */
+.header-buttons .add-button {
+    background-color: #4CAF50;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.header-buttons .add-button:hover {
+    background-color: #388E3C;
+    color: white;
+}
+
+.header-buttons .import-button {
+    background-color: #17a2b8;
+    color: white;
+}
+
+.header-buttons .import-button:hover {
+    background-color: #138496;
+}
+
+.header-buttons .export-button {
+    background-color: #6c757d;
+    color: white;
+}
+
+.header-buttons .export-button:hover {
+    background-color: #5a6268;
+}
+
+.header-buttons .filter-button,
+.header-buttons .edit-tax-button,
+.header-buttons .edit-colors-button,
+.header-buttons .page-settings-button {
+    background-color: white;
+    border: 1px solid #dee2e6;
+}
+
+.header-buttons .filter-button:hover,
+.header-buttons .edit-tax-button:hover,
+.header-buttons .edit-colors-button:hover,
+.header-buttons .page-settings-button:hover {
+    background-color: #f8f9fa;
+    color: #2c1810;
+}
+
+/* Usuwam niepotrzebne style */
 .filter-button,
 .edit-tax-button,
+.edit-colors-button,
 .export-button,
-.import-button {
+.import-button,
+.add-button {
     background: none;
     border: none;
-    font-size: 1.2rem;
     cursor: pointer;
-    padding: 0.5rem;
-    color: #8b4513;
-    transition: color 0.2s ease;
+    transition: all 0.2s ease;
 }
 
 .filter-button:hover,
 .edit-tax-button:hover,
+.edit-colors-button:hover,
 .export-button:hover,
-.import-button:hover {
-    color: #5c2d0c;
+.import-button:hover,
+.add-button:hover {
+    color: var(--primary-color);
 }
 
-.edit-button,
-.add-button {
+.edit-button {
     font-size: 1rem;
     padding: 0.5rem 1rem;
     border: 2px solid #8b4513;
@@ -196,6 +262,7 @@ button:hover {
     flex-direction: column;
     gap: 0.75rem;
     min-height: 100px;
+    position: relative;
 }
 
 .element-card:hover {
@@ -209,6 +276,7 @@ button:hover {
     align-items: center;
     padding-bottom: 0.5rem;
     border-bottom: 2px solid #e9ecef;
+    padding-left: 2rem;
 }
 
 .element-name {
@@ -423,9 +491,9 @@ button:hover {
 /* Układ bento box */
 .bento-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-    gap: 1rem;
-    padding: 0.5rem;
+    grid-template-columns: repeat(auto-fill, minmax(var(--base-box-width), 1fr));
+    gap: var(--grid-gap);
+    padding: calc(var(--grid-gap) / 2);
     max-width: 100%;
     margin: 0 auto;
 }
@@ -436,7 +504,7 @@ button:hover {
     padding: 1.25rem;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     transition: transform 0.2s ease, box-shadow 0.2s ease;
-    min-height: 100px;
+    min-height: var(--base-box-height);
 }
 
 .bento-box:hover {
@@ -446,27 +514,27 @@ button:hover {
 
 /* Style dla różnych rozmiarów boxów */
 .bento-box[style*="grid-column: span 2"] {
-    min-height: 150px;
+    min-height: calc(var(--base-box-height) * 1.5);
 }
 
 .bento-box[style*="grid-column: span 3"] {
-    min-height: 200px;
+    min-height: calc(var(--base-box-height) * 2);
 }
 
 .bento-box[style*="grid-column: span 4"] {
-    min-height: 250px;
+    min-height: calc(var(--base-box-height) * 2.5);
 }
 
 .bento-box[style*="grid-row: span 2"] {
-    min-height: 300px;
+    min-height: calc(var(--base-box-height) * 2);
 }
 
 .bento-box[style*="grid-row: span 3"] {
-    min-height: 450px;
+    min-height: calc(var(--base-box-height) * 3);
 }
 
 .bento-box[style*="grid-row: span 4"] {
-    min-height: 600px;
+    min-height: calc(var(--base-box-height) * 4);
 }
 
 .description-box {
@@ -475,34 +543,7 @@ button:hover {
 }
 
 .add-element-box {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 100px;
-    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-    cursor: pointer;
-}
-
-.add-element-box:hover {
-    background: linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%);
-}
-
-.add-element-box .add-button {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: 1.2rem;
-    background: none;
-    border: none;
-    color: #495057;
-    cursor: pointer;
-}
-
-.add-element-box .add-button:hover {
-    color: #212529;
+    display: none;
 }
 
 /* Responsywność */
@@ -523,49 +564,6 @@ button:hover {
     margin: 0;
     color: #495057;
     font-size: 1.25rem;
-}
-
-/* Modyfikacja przycisków */
-.header-buttons {
-    display: flex;
-    gap: 0.5rem;
-}
-
-.edit-button, .add-button, .import-button, .export-button {
-    padding: 0.4rem 0.8rem;
-    border: none;
-    border-radius: 0.5rem;
-    cursor: pointer;
-    font-size: 0.9rem;
-    transition: all 0.2s ease;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.edit-button {
-    background-color: #e9ecef;
-    color: #495057;
-}
-
-.add-button {
-    background-color: #28a745;
-    color: white;
-}
-
-.import-button {
-    background-color: #17a2b8;
-    color: white;
-}
-
-.export-button {
-    background-color: #6c757d;
-    color: white;
-}
-
-.edit-button:hover, .add-button:hover, .import-button:hover, .export-button:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 /* Style dla formularza */
@@ -760,5 +758,374 @@ button:hover {
 .available-tags .tag.selected {
     background-color: #8b4513;
     color: white;
+    border-color: #8b4513;
+}
+
+.drag-handle {
+    cursor: grab;
+    padding: 0.5rem;
+    color: #8b4513;
+    opacity: 0.5;
+    transition: opacity 0.2s ease;
+    position: absolute;
+    top: 1.25rem;
+    left: 0.5rem;
+}
+
+.drag-handle:hover {
+    opacity: 1;
+}
+
+.element-card.dragging {
+    opacity: 0.5;
+    cursor: grabbing;
+    z-index: 1000;
+}
+
+/* Style dla wyboru koloru */
+.color-picker {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 0.5rem;
+}
+
+.color-picker input[type="color"] {
+    width: 60px;
+    height: 40px;
+    padding: 0;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.reset-color-button {
+    background: none;
+    border: 1px solid #ddd;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    color: #666;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.2s ease;
+}
+
+.reset-color-button:hover {
+    background-color: #f0f0f0;
+    color: #333;
+}
+
+.color-info {
+    display: block;
+    margin-top: 0.5rem;
+    color: #666;
+    font-size: 0.9rem;
+}
+
+/* Style dla boxów z różnymi bilansami */
+.element-card {
+    transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.element-card.positive-balance {
+    background: linear-gradient(135deg, #ffffff 0%, #e8f5e9 100%);
+    border-left: 4px solid #4caf50;
+}
+
+.element-card.negative-balance {
+    background: linear-gradient(135deg, #ffffff 0%, #ffebee 100%);
+    border-left: 4px solid #f44336;
+}
+
+.element-card.neutral-balance {
+    background: linear-gradient(135deg, #ffffff 0%, #f5f5f5 100%);
+    border-left: 4px solid #9e9e9e;
+}
+
+.element-card.custom-color {
+    border-left: none;
+}
+
+/* Modyfikacja hover efektu dla kolorowych boxów */
+.element-card.positive-balance:hover {
+    box-shadow: 0 6px 12px rgba(76, 175, 80, 0.15);
+}
+
+.element-card.negative-balance:hover {
+    box-shadow: 0 6px 12px rgba(244, 67, 54, 0.15);
+}
+
+.element-card.custom-color:hover {
+    transform: translateY(-2px);
+}
+
+.edit-colors-button {
+    background: none;
+    border: none;
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 0.5rem;
+    color: #8b4513;
+    transition: color 0.2s ease;
+}
+
+.edit-colors-button:hover {
+    color: #5c2d0c;
+}
+
+.color-section {
+    margin-bottom: 2rem;
+    padding: 1rem;
+    background-color: #f8f9fa;
+    border-radius: 0.5rem;
+}
+
+.color-section h3 {
+    color: #495057;
+    margin-bottom: 1rem;
+    font-size: 1.1rem;
+}
+
+.color-section .form-group {
+    margin-bottom: 1rem;
+}
+
+.color-section input[type="color"] {
+    width: 100%;
+    height: 40px;
+    padding: 0;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.reset-colors-button {
+    background-color: #6c757d;
+}
+
+.reset-colors-button:hover {
+    background-color: #5a6268;
+}
+
+/* Modyfikacja istniejących klas, aby używały zmiennych CSS */
+:root {
+    --background-color: #f4f1ea;
+    --text-color: #2c1810;
+    --primary-color: #8b4513;
+    --secondary-color: #495057;
+    --positive-balance-color: #e8f5e9;
+    --negative-balance-color: #ffebee;
+    --neutral-balance-color: #f5f5f5;
+    --positive-balance-color-start: #ffffff;
+    --positive-balance-color-end: #e8f5e9;
+    --negative-balance-color-start: #ffffff;
+    --negative-balance-color-end: #ffebee;
+    --neutral-balance-color-start: #ffffff;
+    --neutral-balance-color-end: #f5f5f5;
+    --base-box-width: 250px;
+    --base-box-height: 100px;
+    --grid-gap: 1rem;
+}
+
+body {
+    background-color: var(--background-color);
+    color: var(--text-color);
+}
+
+.element-card.positive-balance {
+    background: linear-gradient(135deg, var(--positive-balance-color-start) 0%, var(--positive-balance-color-end) 100%);
+}
+
+.element-card.negative-balance {
+    background: linear-gradient(135deg, var(--negative-balance-color-start) 0%, var(--negative-balance-color-end) 100%);
+}
+
+.element-card.neutral-balance {
+    background: linear-gradient(135deg, var(--neutral-balance-color-start) 0%, var(--neutral-balance-color-end) 100%);
+}
+
+.element-card.custom-color {
+    border-left: none;
+}
+
+.filter-button,
+.edit-tax-button,
+.edit-colors-button,
+.export-button,
+.import-button {
+    color: var(--primary-color);
+}
+
+.edit-button,
+.add-button {
+    border: 2px solid var(--primary-color);
+}
+
+.export-button:hover,
+.import-button:hover,
+.add-button:hover {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.element-name {
+    color: var(--secondary-color);
+}
+
+.element-actions button {
+    color: var(--secondary-color);
+}
+
+.element-actions button:hover {
+    color: var(--primary-color);
+}
+
+.gradient-colors {
+    display: flex;
+    gap: 1rem;
+    margin-top: 0.5rem;
+}
+
+.color-input {
+    flex: 1;
+}
+
+.color-input label {
+    display: block;
+    margin-bottom: 0.25rem;
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.color-input input[type="color"] {
+    width: 100%;
+    height: 40px;
+    padding: 0;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.reset-colors-button {
+    background-color: #6c757d;
+}
+
+.reset-colors-button:hover {
+    background-color: #5a6268;
+}
+
+/* Modyfikacja stylów dla przycisku dodawania w nagłówku */
+.header-buttons .add-button {
+    color: #28a745;
+}
+
+.header-buttons .add-button:hover {
+    color: #1e7e34;
+}
+
+/* Style dla sekcji ustawień */
+.settings-section {
+    margin-bottom: 2rem;
+    padding: 1rem;
+    background-color: #f8f9fa;
+    border-radius: 0.5rem;
+}
+
+.settings-section h3 {
+    color: #495057;
+    margin-bottom: 1rem;
+    font-size: 1.1rem;
+}
+
+.size-settings {
+    display: flex;
+    gap: 1rem;
+}
+
+.size-settings .form-group {
+    flex: 1;
+}
+
+.size-settings input[type="number"] {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 1rem;
+}
+
+.size-settings input[type="number"]:focus {
+    outline: none;
+    border-color: #8b4513;
+    box-shadow: 0 0 0 2px rgba(139, 69, 19, 0.2);
+}
+
+.reset-settings-button {
+    background-color: #6c757d;
+    color: white;
+}
+
+.reset-settings-button:hover {
+    background-color: #5a6268;
+}
+
+/* Style dla modalu filtrowania */
+.balance-filter {
+    padding: 1rem;
+    background-color: #f8f9fa;
+    border-radius: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.balance-filter h3 {
+    margin: 0 0 1rem 0;
+    color: #8b4513;
+}
+
+.balance-options {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.balance-option {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background-color: white;
+    border: 1px solid #dee2e6;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.balance-option:hover {
+    background-color: #f8f9fa;
+}
+
+.balance-option input[type="checkbox"] {
+    width: 1.2rem;
+    height: 1.2rem;
+    cursor: pointer;
+}
+
+.balance-label {
+    font-size: 0.95rem;
+    font-weight: 500;
+}
+
+.balance-label.positive {
+    color: #28a745;
+}
+
+.balance-label.negative {
+    color: #dc3545;
+}
+
+.balance-option.selected {
+    background-color: #f8f9fa;
     border-color: #8b4513;
 } 
